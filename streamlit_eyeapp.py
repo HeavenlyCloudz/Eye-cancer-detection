@@ -304,22 +304,22 @@ st.markdown(
     """
     <style>
     body {
-        background-color: #ADD8E6; /* Light blue color */
+        background-color: #CBC3E3; /* Light purple color */
     }
     .section {
-        background-image: url('https://jnj-content-lab2.brightspotcdn.com/dims4/default/78c6313/2147483647/strip/false/crop/1440x666+0+0/resize/1440x666!/quality/90/?url=https%3A%2F%2Fjnj-production-jnj.s3.us-east-1.amazonaws.com%2Fbrightspot%2F1b%2F32%2F2e138abbf1792e49103c9e3516a8%2Fno-one-would-believe-me-when-i-suspected-i-had-lung-cancer-0923-new.jpg');
+        background-image: url('https://www.cancer.org/adobe/dynamicmedia/deliver/dm-aid--9f4bfdfd-41b9-4175-a40b-804fda3661c2/eye.jpg?preferwebp=true&quality=82');
         background-size: cover; 
         background-repeat: no-repeat;
         background-position: center;
         padding: 60px; 
         border-radius: 10px;
-        color: black; 
+        color: purple; 
         margin: 20px 0;
         height: 400px; 
     }
     .sidebar .sidebar-content {
         background-color: #ADD8E6; 
-        color: black; 
+        color: yellow; 
     }
     </style>
     """,
