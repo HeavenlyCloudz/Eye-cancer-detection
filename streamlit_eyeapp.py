@@ -80,7 +80,7 @@ def create_efficientnet_model(input_shape=(224, 224, 3),learning_rate=1e-3):
 
     # Compile the model with the Adam optimizer
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
-    model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model  # Return the model
 
@@ -165,14 +165,14 @@ def load_data(train_dir, val_dir, batch_size):
             train_dir,
             target_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
             batch_size=batch_size,
-            class_mode='binary'
+            class_mode='categorical'
         )
 
         val_generator = val_datagen.flow_from_directory(
             val_dir,
             target_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
             batch_size=batch_size,
-            class_mode='binary'
+            class_mode='categorical'
         )
 
         return train_generator, val_generator
@@ -224,7 +224,7 @@ def train(train_dir, val_dir):
 
     class_weights = calculate_class_weights(train_generator)
     imbalance_ratio = max(class_weights.values()) / sum(class_weights.values())
-    loss_function = focal_loss(alpha=0.25, gamma=2.0) if imbalance_ratio > 1.5 else 'binary_crossentropy'
+    loss_function = focal_loss(alpha=0.25, gamma=2.0) if imbalance_ratio > 1.5 else 'categorical_crossentropy'
 
     # Compile the model if it hasn't been compiled yet
     if not model._is_compiled:  # Check if the model is compiled
@@ -250,7 +250,7 @@ def test_model(model):
             test_data_dir,
             target_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
             batch_size=BATCH_SIZE,
-            class_mode='binary'
+            class_mode='categorical'
         )
 
         test_loss, test_accuracy = model.evaluate(test_generator)
@@ -420,8 +420,8 @@ if st.sidebar.button("Train Model"):
                     loss_function = focal_loss(alpha=0.25, gamma=2.0)
                     st.sidebar.write(f"Detected significant class imbalance (ratio: {imbalance_ratio:.2f}). Using Focal Loss.")
                 else:
-                    loss_function = 'binary_crossentropy'
-                    st.sidebar.write(f"Class balance is acceptable (ratio: {imbalance_ratio:.2f}). Using Binary Cross-Entropy.")
+                    loss_function = 'categorical_crossentropy'
+                    st.sidebar.write(f"Class balance is acceptable (ratio: {imbalance_ratio:.2f}). Using Categorical Cross-Entropy.")
 
                 # Add ReduceLROnPlateau Callback
                 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr=1e-6, verbose=1)
