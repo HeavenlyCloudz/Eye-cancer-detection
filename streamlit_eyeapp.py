@@ -150,15 +150,17 @@ def print_layer_names():
 def plot_training_history(history):
     try:
         fig, ax = plt.subplots(1, 2, figsize=(12, 4))
-        ax[0].plot(history.history['accuracy'], label='Train Accuracy')
-        ax[0].plot(history.history['val_accuracy'], label='Validation Accuracy')
+         # Plot accuracy with yellow and purple
+        ax[0].plot(history.history['accuracy'], label='Train Accuracy', color='yellow')
+        ax[0].plot(history.history['val_accuracy'], label='Validation Accuracy', color='purple')
         ax[0].set_title('Model Accuracy')
         ax[0].set_xlabel('Epoch')
         ax[0].set_ylabel('Accuracy')
         ax[0].legend()
 
-        ax[1].plot(history.history['loss'], label='Train Loss')
-        ax[1].plot(history.history['val_loss'], label='Validation Loss')
+        # Plot loss with yellow and purple
+        ax[1].plot(history.history['loss'], label='Train Loss', color='yellow')
+        ax[1].plot(history.history['val_loss'], label='Validation Loss', color='purple')
         ax[1].set_title('Model Loss')
         ax[1].set_xlabel('Epoch')
         ax[1].set_ylabel('Loss')
@@ -168,7 +170,7 @@ def plot_training_history(history):
         st.pyplot(fig)
     except Exception as e:
         st.error(f"Error plotting training history: {str(e)}")
-
+        
 def train(train_dir, val_dir):
     global model
     train_generator, val_generator = load_data(train_dir, val_dir, BATCH_SIZE)
@@ -228,7 +230,7 @@ def test_model(model):
             st.sidebar.write(f"**{label}** - Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}")
 
         fig, ax = plt.subplots(figsize=(8, 6))
-        sns.heatmap(cmatrix, annot=True, fmt='d', cmap='Blues',
+        sns.heatmap(cmatrix, annot=True, fmt='d', cmap='Yellows',
                     xticklabels=class_labels, yticklabels=class_labels, ax=ax)
         ax.set_ylabel('Actual')
         ax.set_xlabel('Predicted')
@@ -297,7 +299,7 @@ def display_gradcam(img, heatmap, alpha=0.4):
         return None
 
 # Streamlit UI
-st.title("Lung Cancer Detection💻")
+st.title("Eye Cancer Detection👀")
 st.markdown(
     """
     <style>
