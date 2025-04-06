@@ -2,15 +2,13 @@ import streamlit as st
 import snowflake.connector
 import os
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.models import Model
-from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
+from tensorflow.keras.models import load_model, Model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras import layers
 from tensorflow.keras.applications import EfficientNetB0
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from sklearn.utils.class_weight import compute_class_weight
-from sklearn.utils import class_weight
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -23,25 +21,22 @@ import matplotlib.cm as cm
 IMAGE_HEIGHT, IMAGE_WIDTH = 224, 224
 MODEL_FILE = 'eye_cancer_detection_model.keras'
 BATCH_SIZE = 32
+EPOCHS = 10
 base_data_dir = os.path.join(os.getcwd(), 'data')
 train_data_dir = os.path.join(base_data_dir, 'train')
 val_data_dir = os.path.join(base_data_dir, 'val')
 test_data_dir = os.path.join(base_data_dir, 'test')
 
-# Set the last convolutional layer name for Grad-CAM 
 last_conv_layer_name = 'top_conv'
-
-is_new_model = False  # Global flag to indicate if a new model is created
+is_new_model = False
 
 # Function to calculate class weights
 def calculate_class_weights(train_generator):
-    # Assuming that the class labels are integers, e.g., 0 and 1 for binary classification
     labels = train_generator.classes
     class_weights = compute_class_weight('balanced', classes=np.unique(labels), y=labels)
     class_weights_dict = {i: class_weights[i] for i in range(len(class_weights))}
     return class_weights_dict
 
-# Function to compute imbalance ratio
 def compute_class_weights(train_generator):
     class_weights = calculate_class_weights(train_generator)
     total_class_weight = sum(class_weights.values())
@@ -53,61 +48,48 @@ def focal_loss(alpha=0.25, gamma=2.0):
     def focal_loss_fixed(y_true, y_pred):
         epsilon = tf.keras.backend.epsilon()
         y_pred = tf.clip_by_value(y_pred, epsilon, 1. - epsilon)
-        cross_entropy = -y_true * tf.math.log(y_pred) - (1 - y_true) * tf.math.log(1 - y_pred)
+        cross_entropy = -y_true * tf.math.log(y_pred)
         loss = alpha * tf.pow(1 - y_pred, gamma) * cross_entropy
         return tf.reduce_mean(loss)
     return focal_loss_fixed
 
-def create_efficientnet_model(input_shape=(224, 224, 3),learning_rate=1e-3):
+def create_efficientnet_model(input_shape=(224, 224, 3), learning_rate=1e-3):
     base_model = EfficientNetB0(include_top=False, weights='imagenet', input_shape=input_shape)
-
-    # Freeze all layers initially
     for layer in base_model.layers:
         layer.trainable = False
-
-    # Unfreeze last 50 layers for fine-tuning
     for layer in base_model.layers[-50:]:
         layer.trainable = True
 
-    # Build the model
     x = base_model.output
     x = layers.GlobalAveragePooling2D()(x)
     x = layers.Dense(256, activation='relu')(x)
     x = layers.Dropout(0.4)(x)
-    predictions = layers.Dense(1, activation='sigmoid')(x)
+    predictions = layers.Dense(3, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs=base_model.input, outputs=predictions)
-
-    # Compile the model with the Adam optimizer
-    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
+    model = Model(inputs=base_model.input, outputs=predictions)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
 
-    return model  # Return the model
-
-# Load model from file or create a new one
 def load_model_file():
     global is_new_model
     if os.path.exists(MODEL_FILE):
         try:
             model = load_model(MODEL_FILE, custom_objects={"focal_loss": focal_loss})
-            # Set last 50 layers as trainable
             for layer in model.layers[-50:]:
                 layer.trainable = True
             st.success("Model loaded successfully!")
-            st.success("✅")
             return model
         except Exception as e:
             st.error(f"Error loading model: {e}")
             return None
     else:
         st.warning("No saved model found. Creating a new model.")
-        is_new_model = True  # Set the flag to indicate a new model is created
+        is_new_model = True
         return create_efficientnet_model()
 
-# Load or create the model
 model = load_model_file()
 
-# Define the predict function with tf.function
 @tf.function(input_signature=[tf.TensorSpec(shape=[None, 224, 224, 3], dtype=tf.float32)])
 def predict(input_tensor):
     return model(input_tensor)
@@ -115,51 +97,30 @@ def predict(input_tensor):
 def preprocess_image(img_path):
     try:
         img = Image.open(img_path)
-
-        # Convert to RGB if necessary
         if img.mode != 'RGB':
             img = img.convert('RGB')
-
-        # Resize image to (224, 224)
         img = img.resize((224, 224))
-        print(f"Resized image size: {img.size}")  # Debugging print
-
-        # Convert image to numpy array
         img_array = np.asarray(img, dtype=np.float32)
-
-        # Ensure the correct shape
         if img_array.shape != (224, 224, 3):
             raise ValueError(f"Unexpected shape after resizing: {img_array.shape}")
-
-        # Normalize the image data using EfficientNet's preprocess_input
         img_array = preprocess_input(img_array)
-
-        # Expand dimensions to fit the model's input shape (1, 224, 224, 3)
         img_array = np.expand_dims(img_array, axis=0)
-        print(f"Image array shape after expanding: {img_array.shape}")  # Debugging print
-
         return img_array
-
     except Exception as e:
-        print(f"Error processing image: {str(e)}")  # More detailed error message for debugging
+        print(f"Error processing image: {str(e)}")
         return None
 
-# Main function to run predictions
 def main():
-    # Example usage of the predict function
-    image_tensor = tf.random.uniform((1, 224, 224, 3))  # Simulate an image tensor
+    image_tensor = tf.random.uniform((1, 224, 224, 3))
     result = predict(image_tensor)
     print(result)
 
-# Load training and validation data
 def load_data(train_dir, val_dir, batch_size):
     train_datagen = ImageDataGenerator(rescale=1./255, rotation_range=20,
                                        width_shift_range=0.2, height_shift_range=0.2,
                                        shear_range=0.2, zoom_range=0.2,
                                        horizontal_flip=True, fill_mode='nearest')
-
     val_datagen = ImageDataGenerator(rescale=1./255)
-
     try:
         train_generator = train_datagen.flow_from_directory(
             train_dir,
@@ -167,14 +128,12 @@ def load_data(train_dir, val_dir, batch_size):
             batch_size=batch_size,
             class_mode='categorical'
         )
-
         val_generator = val_datagen.flow_from_directory(
             val_dir,
             target_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
             batch_size=batch_size,
             class_mode='categorical'
         )
-
         return train_generator, val_generator
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
@@ -183,8 +142,7 @@ def load_data(train_dir, val_dir, batch_size):
 def print_layer_names():
     try:
         base_model = EfficientNetB0(include_top=False, weights='', input_shape=(224, 224, 3))
-        layer_names = [layer.name for layer in base_model.layers]
-        return layer_names
+        return [layer.name for layer in base_model.layers]
     except Exception as e:
         st.error(f"Error in print_layer_names: {str(e)}")
         return []
@@ -192,7 +150,6 @@ def print_layer_names():
 def plot_training_history(history):
     try:
         fig, ax = plt.subplots(1, 2, figsize=(12, 4))
-
         ax[0].plot(history.history['accuracy'], label='Train Accuracy')
         ax[0].plot(history.history['val_accuracy'], label='Validation Accuracy')
         ax[0].set_title('Model Accuracy')
@@ -211,13 +168,10 @@ def plot_training_history(history):
         st.pyplot(fig)
     except Exception as e:
         st.error(f"Error plotting training history: {str(e)}")
- 
- # Training function
+
 def train(train_dir, val_dir):
-    global model  # Use the global model variable
-
+    global model
     train_generator, val_generator = load_data(train_dir, val_dir, BATCH_SIZE)
-
     if not train_generator or not val_generator:
         st.error("Failed to load training or validation data.")
         return
@@ -226,12 +180,10 @@ def train(train_dir, val_dir):
     imbalance_ratio = max(class_weights.values()) / sum(class_weights.values())
     loss_function = focal_loss(alpha=0.25, gamma=2.0) if imbalance_ratio > 1.5 else 'categorical_crossentropy'
 
-    # Compile the model if it hasn't been compiled yet
-    if not model._is_compiled:  # Check if the model is compiled
+    if not model._is_compiled:
         optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
         model.compile(optimizer=optimizer, loss=loss_function, metrics=['accuracy'])
 
-    # Train the model
     history = model.fit(
         train_generator,
         epochs=EPOCHS,
@@ -250,7 +202,8 @@ def test_model(model):
             test_data_dir,
             target_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
             batch_size=BATCH_SIZE,
-            class_mode='categorical'
+            class_mode='categorical',
+            shuffle=False
         )
 
         test_loss, test_accuracy = model.evaluate(test_generator)
@@ -258,35 +211,33 @@ def test_model(model):
         st.sidebar.write(f"Test Accuracy: {test_accuracy:.4f}")
 
         y_pred = model.predict(test_generator)
-        y_pred_classes = np.where(y_pred > 0.5, 1, 0)
-        cm = confusion_matrix(test_generator.classes, y_pred_classes)
+        y_pred_classes = np.argmax(y_pred, axis=1)
+        y_true = test_generator.classes
+        cmatrix = confusion_matrix(y_true, y_pred_classes)
 
-        # Calculate precision and recall
-        tp = cm[1, 1]  
-        fp = cm[0, 1]  
-        fn = cm[1, 0]  
+        class_labels = list(test_generator.class_indices.keys())
 
-        precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-        recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+        st.sidebar.write("Class-wise Metrics:")
+        for i, label in enumerate(class_labels):
+            tp = cmatrix[i, i]
+            fp = sum(cmatrix[:, i]) - tp
+            fn = sum(cmatrix[i, :]) - tp
+            precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+            recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+            f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+            st.sidebar.write(f"**{label}** - Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}")
 
-        # Calculate F1 Score
-        f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-
-        st.sidebar.write(f"Precision: {precision:.4f}")
-        st.sidebar.write(f"Recall: {recall:.4f}")
-        st.sidebar.write(f"F1 Score: {f1_score:.4f}")
-
-        # Plot confusion matrix
         fig, ax = plt.subplots(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                    xticklabels=['Non-Cancerous', 'Cancerous'], 
-                    yticklabels=['Non-Cancerous', 'Cancerous'], ax=ax)
+        sns.heatmap(cmatrix, annot=True, fmt='d', cmap='Blues',
+                    xticklabels=class_labels, yticklabels=class_labels, ax=ax)
         ax.set_ylabel('Actual')
         ax.set_xlabel('Predicted')
         ax.set_title('Confusion Matrix')
         st.pyplot(fig)
+
     except Exception as e:
         st.error(f"Error during testing: {str(e)}")
+
 
 def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
     try:
@@ -374,11 +325,11 @@ st.markdown(
 )
 
 st.markdown('<div class="section">', unsafe_allow_html=True)
-st.header("Thank you for using ONCO AI🌐")
-st.write("CNNs are the preferred network for detecting lung cancer due to their ability to process image data. They can perform tasks such as classification, segmentation, and object recognition. In the case of lung cancer detection, CNNs have surpassed radiologists.")
+st.header("Thank you for using OPTI👁️")
+st.write("CNNs are the preferred network for detecting eye cancer due to their ability to process image data. They can perform tasks such as classification, segmentation, and object recognition. In the case of eye cancer detection, CNNs have shown promise in surpassing traditional methods and offering a more efficient and accurate approach to early diagnosis.")
 st.markdown('</div>', unsafe_allow_html=True)
-st.markdown("Visit [ONCO AI](https://readymag.website/u4174625345/5256774/) for more information.")
-st.markdown("Visit my [GitHub](https://github.com/HeavenlyCloudz/lung-cancer-detection-app) repository for insight on my code.")
+st.markdown("Visit [OPTI](https://readymag.website/u4174625345/5256774/) for more information.")
+st.markdown("Visit my [GitHub](https://github.com/HeavenlyCloudz/Eye-cancer-detection.git) repository for insight on my code.")
 
 # Sidebar controls
 st.sidebar.title("Controls🎮")
@@ -473,34 +424,38 @@ def process_and_predict(image_path, model, last_conv_layer_name):
 
         if processed_image is not None and model:
             # Make prediction
-            prediction = model.predict(processed_image)[0][0]
-            confidence = prediction if prediction > 0.5 else 1 - prediction  # Confidence Score
+            predictions = model.predict(processed_image)[0]  # For multi-class, get the full prediction
+            predicted_class = np.argmax(predictions)  # Get the class with the highest probability
+            confidence = predictions[predicted_class]  # Confidence of the predicted class
             confidence_percentage = confidence * 100  # Convert to percentage
 
-            # Determine result label
-            result = 'Cancerous' if prediction > 0.5 else 'Non-Cancerous'
+            # Class labels for the three categories
+            class_labels = ["Eye Cancer", "Non-Cancerous Eye Disease", "Normal Eyes"]
+            result = class_labels[predicted_class]
 
             # Display Prediction Result
             st.subheader("Prediction Result:")
             st.write(f"**{result}**")
             st.write(f"**Confidence: {confidence_percentage:.2f}%**")  # Show confidence
 
-            # Add description for cancerous result
-            if result == 'Cancerous':
-                st.write("**Note:** The model has determined this CT scan to stipulate the presence of cancer. Please consult with a health professional and other experts on these results.")
+            # Add description based on result
+            if result == 'Eye Cancer':
+                st.write("**Note:** The model has determined the presence of eye cancer. Please consult with a healthcare professional for further assessment.")
+            elif result == 'Non-Cancerous Eye Disease':
+                st.write("**Note:** The model has determined the presence of a non-cancerous eye disease. This could be one of several benign conditions, but you should still consult a professional for further clarification.")
+            elif result == 'Normal Eyes':
+                st.write("**Note:** The model has determined your eyes are normal. However, regular eye check-ups are recommended for maintaining eye health.")
 
-            if result == 'Non-Cancerous':
-                st.write("**Note:** The model has determined this CT scan to be exempt from the presence of cancer. However, please continue to consult a health professional and other experts on these results.")
-
-                # Symptoms checkboxes
+            # Additional symptoms check for eye diseases
+            if result != 'Normal Eyes':
                 symptoms = [
-                    "Persistent cough",
-                    "Shortness of breath",
-                    "Chest pain",
-                    "Fatigue",
-                    "Weight loss",
-                    "Wheezing",
-                    "Coughing up blood"
+                    "Vision loss",
+                    "Blurred vision",
+                    "Eye pain",
+                    "Redness or swelling",
+                    "Sensitivity to light",
+                    "Double vision",
+                    "Seeing flashes or floaters"
                 ]
 
                 # Multi-select for symptoms
@@ -510,13 +465,14 @@ def process_and_predict(image_path, model, last_conv_layer_name):
                 if st.button("Done"):
                     # Check how many symptoms are selected
                     if len(selected_symptoms) > 3:
-                        st.warning("Even if it isn't cancer according to the model, these symptoms could point to other possible illnesses. Please contact medical support.")
+                        st.warning("Even if it isn't cancer, these symptoms could indicate other eye conditions. Please contact a healthcare provider.")
                     elif len(selected_symptoms) == 3:
-                        st.warning("These symptoms could possibly point to other diseases as well. Be sure to consult a health provider if they continue to worsen.")
+                        st.warning("These symptoms could possibly point to other eye conditions. Be sure to consult a healthcare provider.")
                     elif len(selected_symptoms) > 0:
                         st.success("You have selected a manageable number of symptoms. Monitor your health and consult a healthcare provider if necessary.")
                     else:
                         st.info("No symptoms selected. If you are feeling unwell, please consult a healthcare provider.")
+
 
             # Generate Grad-CAM heatmap
             try:
