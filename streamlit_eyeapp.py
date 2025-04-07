@@ -16,6 +16,22 @@ IMAGE_WIDTH = 224
 BATCH_SIZE = 32
 MODEL_FILENAME = 'eye_cancer_model.keras'
 
+# Class labels
+CLASS_LABELS = [
+    "Normal",  # 0
+    "Eye Cancer",  # 1
+    "Glaucoma",  # 2
+    "Cataract",  # 3
+    "Myopia",  # 4
+    "Background Diabetic Retinopathy",  # 5
+    "Central Retinal Vein Occlusion",  # 6
+    "Optic Atrophy",  # 7
+    "Disc Swelling and Abnormality",  # 8
+    "Preretinal Hemorrhage",  # 9
+    "Hypertensive Retinopathy",  # 10
+    "Age Related Macular Degeneration"  # 11
+]
+
 # Load data function
 def load_data(train_dir, val_dir, test_dir):
     train_datagen = ImageDataGenerator(rescale=1./255, rotation_range=20,
@@ -109,7 +125,7 @@ if uploaded_zip is not None:
             train_generator, val_generator, test_generator = load_data(train_dir, val_dir, test_dir)
             
             if train_generator and val_generator:
-                num_classes = train_generator.num_classes  # Get number of classes
+                num_classes = len(CLASS_LABELS)  # Set number of classes based on defined labels
                 
                 # Check if the model already exists
                 if os.path.exists(MODEL_FILENAME):
@@ -135,11 +151,12 @@ if uploaded_file is not None:
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
     predictions = model.predict(np.expand_dims(img_array, axis=0))
-    predicted_class = np.argmax(predictions)
-    st.write(f"Predicted Class: {list(train_generator.class_indices.keys())[predicted_class]}")
+    predicted_class_idx = np.argmax(predictions)
+    predicted_class = CLASS_LABELS[predicted_class_idx]
+    st.write(f"Predicted Class: {predicted_class}")
 
     # Grad-CAM overlay
-    heatmap = grad_cam(model, img_array, predicted_class)
+    heatmap = grad_cam(model, img_array, predicted_class_idx)
     heatmap = cv2.resize(heatmap, (IMAGE_WIDTH, IMAGE_HEIGHT))
     heatmap = np.uint8(255 * heatmap)
     heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
