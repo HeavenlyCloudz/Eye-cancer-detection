@@ -312,7 +312,7 @@ st.markdown(
         background-repeat: no-repeat;
         background-position: center;
         padding: 60px; 
-        border-radius: 10px;
+        border-radius: px;
         color: purple; 
         margin: 20px 0;
         height: 400px; 
