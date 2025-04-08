@@ -1,25 +1,23 @@
-# OPTI AI - Eye Disease Prediction
+# Melanoma AI - Skin Cancer Prediction
 
 ## Overview
 
-OPTI AI is a Streamlit application that utilizes a convolutional neural network (CNN) model to predict the presence of various eye conditions, including eye cancer and ten different non-cancerous eye diseases. The application aims to provide an intuitive interface for users to upload images of eyes and receive predictions about potential health issues.
+Melanoma AI is a Streamlit application that utilizes a convolutional neural network (CNN) model to predict the presence of melanoma and various non-cancerous skin conditions. The application aims to provide an intuitive interface for users to upload images of skin lesions and receive predictions about potential health issues.
 
 ## Features
 
 - **Model Predictions**: Predicts the presence of:
-  - **Eye Cancer**
-  - **Non-Cancerous Eye Diseases**:
-    - Glaucoma
-    - Cataract
-    - Myopia
-    - Background Diabetic Retinopathy
-    - Central Retinal Vein Occlusion
-    - Optic Atrophy
-    - Disc Swelling and Abnormality
-    - Preretinal Hemorrhage
-    - Hypertensive Retinopathy
-    - Age Related Macular Degeneration
-  - **Normal Eyes**
+  - **Melanoma**
+  - **Non-Cancerous Skin Conditions**:
+    - Nevus
+    - Seborrheic Keratosis
+    - Actinic Keratosis
+    - Basal Cell Carcinoma
+    - Squamous Cell Carcinoma
+    - Dermatofibroma
+    - Psoriasis
+    - Eczema
+    - Normal Skin
 
 - **User-Friendly Interface**: Allows users to easily upload images and receive predictions.
 
