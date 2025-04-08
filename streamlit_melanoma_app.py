@@ -193,14 +193,12 @@ def plot_training_history(history):
         fig, ax = plt.subplots(1, 2, figsize=(12, 4))
 
         ax[0].plot(history.history['accuracy'], label='Train Accuracy')
-        ax[0].plot(history.history['val_accuracy'], label='Validation Accuracy')
         ax[0].set_title('Model Accuracy')
         ax[0].set_xlabel('Epoch')
         ax[0].set_ylabel('Accuracy')
         ax[0].legend()
 
         ax[1].plot(history.history['loss'], label='Train Loss')
-        ax[1].plot(history.history['val_loss'], label='Validation Loss')
         ax[1].set_title('Model Loss')
         ax[1].set_xlabel('Epoch')
         ax[1].set_ylabel('Loss')
@@ -234,7 +232,6 @@ def train(train_dir):
     history = model.fit(
         train_generator,
         epochs=EPOCHS,
-        validation_data=val_generator,
         class_weight=class_weights
     )
 
@@ -432,7 +429,6 @@ if st.sidebar.button("Train Model📈"):
                 # Train the model
                 history = model.fit(
                     train_generator,
-                    validation_data=val_generator,
                     epochs=epochs,
                     class_weight=class_weights,
                     callbacks=[reduce_lr]
