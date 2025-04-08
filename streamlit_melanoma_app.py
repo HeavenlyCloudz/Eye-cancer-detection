@@ -355,7 +355,7 @@ st.markdown(
         background-color: #ADD8E6; /* Light blue color */
     }
     .section {
-        background-image: url('https://jnj-content-lab2.brightspotcdn.com/dims4/default/78c6313/2147483647/strip/false/crop/1440x666+0+0/resize/1440x666!/quality/90/?url=https%3A%2F%2Fjnj-production-jnj.s3.us-east-1.amazonaws.com%2Fbrightspot%2F1b%2F32%2F2e138abbf1792e49103c9e3516a8%2Fno-one-would-believe-me-when-i-suspected-i-had-lung-cancer-0923-new.jpg');
+        background-image: url('https://images-provider.frontiersin.org/api/ipx/w=1200&f=png/https://www.frontiersin.org/files/Articles/965630/fphys-13-965630-HTML/image_m/fphys-13-965630-g001.jpg');
         background-size: cover; 
         background-repeat: no-repeat;
         background-position: center;
@@ -366,8 +366,8 @@ st.markdown(
         height: 400px; 
     }
     .sidebar .sidebar-content {
-        background-color: #ADD8E6; 
-        color: black; 
+        background-color: #A020F0; 
+        color: purple; 
     }
     </style>
     """,
