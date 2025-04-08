@@ -160,21 +160,23 @@ def main():
     print(result)
 
 
-def load_test_data(test_dir, batch_size):
-    test_datagen = ImageDataGenerator(rescale=1./255)
+def load_train_data(train_dir, batch_size):
+    # Image data generator for training data
+    train_datagen = ImageDataGenerator(rescale=1./255)
 
     try:
-        test_generator = test_datagen.flow_from_directory(
-            test_dir,
+        # Load training data
+        train_generator = train_datagen.flow_from_directory(
+            train_dir,
             target_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
             batch_size=batch_size,
             class_mode='binary',
-            shuffle=False  # important for evaluation
+            shuffle=True  # shuffle for training
         )
 
-        return test_generator
+        return train_generator
     except Exception as e:
-        print(f"Error loading test data: {str(e)}")
+        print(f"Error loading training data: {str(e)}")
         return None
 
 
@@ -373,7 +375,7 @@ st.markdown(
 )
 
 st.markdown('<div class="section">', unsafe_allow_html=True)
-st.header("Thank you for using this AI detection CNN")
+st.header("Thank you for using this Skin Cancer AI Detection CNN")
 st.write("CNNs are highly effective for detecting melanoma due to their capability to process image data. They excel in tasks like classification and object recognition, often surpassing human dermatologists in accuracy.")
 st.markdown('</div>', unsafe_allow_html=True)
 st.markdown("Visit my [GitHub](https://github.com/HeavenlyCloudz/skin-cancer-detection.git) repository for insight on my code.")
