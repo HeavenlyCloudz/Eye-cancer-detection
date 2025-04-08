@@ -1,8 +1,8 @@
-# Melanoma AI - Skin Cancer Prediction
+# NOMA AI - Skin Cancer Prediction
 
 ## Overview
 
-Melanoma AI is a Streamlit application that utilizes a convolutional neural network (CNN) model to predict the presence of melanoma and various non-cancerous skin conditions. The application aims to provide an intuitive interface for users to upload images of skin lesions and receive predictions about potential health issues.
+NOMA AI is a Streamlit application that utilizes a convolutional neural network (CNN) model to predict the presence of melanoma and various non-cancerous skin conditions. The application aims to provide an intuitive interface for users to upload images of skin lesions and receive predictions about potential health issues.
 
 ## Features
 
