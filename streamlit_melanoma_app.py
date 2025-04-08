@@ -160,7 +160,7 @@ def main():
     print(result)
 
 
-def load_train_data(train_dir, batch_size):
+def load_data(train_dir, batch_size):
     # Image data generator for training data
     train_datagen = ImageDataGenerator(rescale=1./255)
 
