@@ -393,10 +393,10 @@ eval_epochs = st.sidebar.number_input("Evaluations for testing🔎", min_value=1
 if st.sidebar.button("Train Model📈"):
     if model is not None:
         with st.spinner("Training the model💡..."):
-            train_generator, val_generator = load_data(train_data_dir, val_data_dir, BATCH_SIZE)
+            train_generator = load_data(train_data_dir, BATCH_SIZE)
 
             # Ensure generators are loaded
-            if train_generator is not None and val_generator is not None:
+            if train_generator is not None:
                 y_train = train_generator.classes
                 class_labels = np.unique(y_train)
                 weights = compute_class_weight('balanced', classes=class_labels, y=y_train)
