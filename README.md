@@ -8,13 +8,7 @@ NOMA AI is a Streamlit application that utilizes a convolutional neural network 
 
 - **Model Predictions**: Predicts the presence of:
   - **Melanoma**
-  - **Benign Conditions**:
-    - Nevus
-    - Seborrheic Keratosis
-    - Dermatofibroma
-    - Psoriasis
-    - Eczema
-    - Normal Skin
+  - **Benign Conditions**
 
 - **User-Friendly Interface**: Allows users to easily upload images and receive predictions.
 
