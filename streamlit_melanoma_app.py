@@ -1,4 +1,3 @@
-
 import streamlit as st
 import os
 import tensorflow as tf
@@ -160,7 +159,7 @@ def main():
     print(result)
 
 
-def load_train_data(train_dir, batch_size):
+def load_data(train_dir, batch_size):
     # Image data generator for training data
     train_datagen = ImageDataGenerator(rescale=1./255)
 
@@ -194,14 +193,12 @@ def plot_training_history(history):
         fig, ax = plt.subplots(1, 2, figsize=(12, 4))
 
         ax[0].plot(history.history['accuracy'], label='Train Accuracy')
-        ax[0].plot(history.history['val_accuracy'], label='Validation Accuracy')
         ax[0].set_title('Model Accuracy')
         ax[0].set_xlabel('Epoch')
         ax[0].set_ylabel('Accuracy')
         ax[0].legend()
 
         ax[1].plot(history.history['loss'], label='Train Loss')
-        ax[1].plot(history.history['val_loss'], label='Validation Loss')
         ax[1].set_title('Model Loss')
         ax[1].set_xlabel('Epoch')
         ax[1].set_ylabel('Loss')
@@ -213,13 +210,13 @@ def plot_training_history(history):
         st.error(f"Error plotting training history: {str(e)}")
 
 # Training function
-def train(train_dir, val_dir):
+def train(train_dir):
     global model  # Use the global model variable
 
-    train_generator, val_generator = load_data(train_dir, val_dir, BATCH_SIZE)
+    train_generator = load_data(train_dir, BATCH_SIZE)
 
-    if not train_generator or not val_generator:
-        st.error("Failed to load training or validation data.")
+    if not train_generator:
+        st.error("Failed to load training data.")
         return
 
     class_weights = calculate_class_weights(train_generator)
@@ -235,7 +232,6 @@ def train(train_dir, val_dir):
     history = model.fit(
         train_generator,
         epochs=EPOCHS,
-        validation_data=val_generator,
         class_weight=class_weights
     )
 
@@ -355,7 +351,7 @@ st.markdown(
         background-color: #ADD8E6; /* Light blue color */
     }
     .section {
-        background-image: url('https://jnj-content-lab2.brightspotcdn.com/dims4/default/78c6313/2147483647/strip/false/crop/1440x666+0+0/resize/1440x666!/quality/90/?url=https%3A%2F%2Fjnj-production-jnj.s3.us-east-1.amazonaws.com%2Fbrightspot%2F1b%2F32%2F2e138abbf1792e49103c9e3516a8%2Fno-one-would-believe-me-when-i-suspected-i-had-lung-cancer-0923-new.jpg');
+        background-image: url('https://images-provider.frontiersin.org/api/ipx/w=1200&f=png/https://www.frontiersin.org/files/Articles/965630/fphys-13-965630-HTML/image_m/fphys-13-965630-g001.jpg');
         background-size: cover; 
         background-repeat: no-repeat;
         background-position: center;
@@ -366,8 +362,8 @@ st.markdown(
         height: 400px; 
     }
     .sidebar .sidebar-content {
-        background-color: #ADD8E6; 
-        color: black; 
+        background-color: #A020F0; 
+        color: purple; 
     }
     </style>
     """,
@@ -381,26 +377,26 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.markdown("Visit my [GitHub](https://github.com/HeavenlyCloudz/skin-cancer-detection.git) repository for insight on my code.")
 
 # Sidebar controls
-st.sidebar.title("Controls🎮")
+st.sidebar.title("CONTROLS🎛")
 
 # Load the model
 model = load_model_file()
 
 # Hyperparameter inputs
-epochs = st.sidebar.number_input("Number of epochs for training", min_value=1, max_value=100, value=10)
-batch_size = st.sidebar.number_input("Batch size", min_value=1, max_value=64, value=BATCH_SIZE)
+epochs = st.sidebar.number_input("Epochs for training💪", min_value=1, max_value=100, value=10)
+batch_size = st.sidebar.number_input("Batch size🔲", min_value=1, max_value=64, value=BATCH_SIZE)
 
 # Add input for number of evaluations during testing
-eval_epochs = st.sidebar.number_input("Number of evaluations for testing", min_value=1, max_value=10, value=1)
+eval_epochs = st.sidebar.number_input("Evaluations for testing🔎", min_value=1, max_value=10, value=1)
 
 # Button to train model
-if st.sidebar.button("Train Model"):
+if st.sidebar.button("Train Model📈"):
     if model is not None:
-        with st.spinner("Training the model🤖..."):
-            train_generator, val_generator = load_data(train_data_dir, val_data_dir, BATCH_SIZE)
+        with st.spinner("Training the model💡..."):
+            train_generator = load_data(train_data_dir, BATCH_SIZE)
 
             # Ensure generators are loaded
-            if train_generator is not None and val_generator is not None:
+            if train_generator is not None:
                 y_train = train_generator.classes
                 class_labels = np.unique(y_train)
                 weights = compute_class_weight('balanced', classes=class_labels, y=y_train)
@@ -433,7 +429,6 @@ if st.sidebar.button("Train Model"):
                 # Train the model
                 history = model.fit(
                     train_generator,
-                    validation_data=val_generator,
                     epochs=epochs,
                     class_weight=class_weights,
                     callbacks=[reduce_lr]
@@ -441,7 +436,7 @@ if st.sidebar.button("Train Model"):
 
                 # Save model
                 model.save(MODEL_FILE)
-                st.success("Model trained and saved successfully!")
+                st.success("Model trained and saved successfully🔌!")
                 plot_training_history(history)
 
                 # Add a download button for the model file after training completes
@@ -457,7 +452,7 @@ if st.sidebar.button("Train Model"):
         st.error("Model is not available for training. Please check model initialization.")
 
 # Button to test model
-if st.sidebar.button("Test Model"):
+if st.sidebar.button("Test Model📚"):
     if model:
         with st.spinner("Testing the model📝..."):
             for _ in range(eval_epochs):  # Repeat testing as per user input
@@ -481,7 +476,7 @@ def process_and_predict(image_path, model, last_conv_layer_name):
             result = 'Malignant' if prediction > 0.5 else 'Benign'
 
             # Display Prediction Result
-            st.subheader("Prediction Result:")
+            st.subheader("Prediction Result📟:")
             st.write(f"**{result}**")
             st.write(f"**Confidence: {confidence_percentage:.2f}%**")  # Show confidence
 
@@ -504,7 +499,7 @@ def process_and_predict(image_path, model, last_conv_layer_name):
                 ]
 
                 # Multi-select for symptoms
-                selected_symptoms = st.multiselect("Please select any symptoms you are experiencing:", symptoms)
+                selected_symptoms = st.multiselect("Please select any symptoms you are experiencing🤒:", symptoms)
 
                 # Done button
                 if st.button("Done"):
@@ -560,7 +555,7 @@ def process_and_predict(image_path, model, last_conv_layer_name):
 last_conv_layer_name = 'top_conv'
 
 # Normal Image Upload
-uploaded_file = st.sidebar.file_uploader("Upload your image (JPG, PNG)", type=["jpg", "jpeg", "png"])
+uploaded_file = st.sidebar.file_uploader("Upload your image (JPG, PNG)💻", type=["jpg", "jpeg", "png"])
 if uploaded_file is not None:
     file_extension = uploaded_file.name.split('.')[-1]
     temp_filename = f"temp_image.{file_extension}"
@@ -571,7 +566,7 @@ if uploaded_file is not None:
     process_and_predict(temp_filename, model, last_conv_layer_name)
 
 # Mobile Capture Option
-st.sidebar.header("Take a Picture")
+st.sidebar.header("Take a Picture📸")
 photo = st.sidebar.file_uploader("Capture a photo", type=["jpg", "jpeg", "png"])
 if photo is not None:
     file_extension = photo.name.split('.')[-1]
@@ -583,18 +578,18 @@ if photo is not None:
     process_and_predict(captured_filename, model, last_conv_layer_name)
 
 # Clear cache button
-if st.button("Clear Cache"):
+if st.button("Clear Cache📨"):
     st.cache_data.clear()  # Clear the cache
     st.success("Cache cleared successfully!🎯")
 
-if st.sidebar.button("Show Layer Names"):
+if st.sidebar.button("Show Layer Names📃"):
     st.write("Layer names in EfficientNetB0:")
     layer_names = print_layer_names()
     st.text("\n".join(layer_names))
 
 # Function to collect feedback
 def collect_feedback():
-    st.title(":rainbow[Feedback] Form")
+    st.title(":rainbow[Feedback] Form📖")
     
     # Add a text area for the feedback
     feedback = st.text_area("Please share your feedback to improve this app💕", "", height=150)
