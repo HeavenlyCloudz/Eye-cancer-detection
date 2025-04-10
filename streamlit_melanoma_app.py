@@ -375,6 +375,7 @@ st.header("Thank you for using this Skin Cancer AI Detection CNN")
 st.write("CNNs are highly effective for detecting melanoma due to their capability to process image data. They excel in tasks like classification and object recognition, often surpassing human dermatologists in accuracy.")
 st.markdown('</div>', unsafe_allow_html=True)
 st.markdown("Visit my [GitHub](https://github.com/HeavenlyCloudz/skin-cancer-detection.git) repository for insight on my code.")
+st.markdown("Visit my website [NOMA AI](https://mails4anietor.wixsite.com/nova-ai) for insight on my CNN.")
 
 # Sidebar controls
 st.sidebar.title("CONTROLS🎛")
