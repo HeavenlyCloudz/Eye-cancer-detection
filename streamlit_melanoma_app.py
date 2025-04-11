@@ -343,7 +343,7 @@ def display_gradcam(img, heatmap, alpha=0.4):
         return None
         
 # Streamlit UI
-st.title("NOVA AI🦠")
+st.title("NOMA AI🦠")
 st.markdown(
     """
     <style>
