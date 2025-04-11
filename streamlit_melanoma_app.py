@@ -484,6 +484,59 @@ def process_and_predict(image_path, model, last_conv_layer_name):
             # Add description for cancerous result
             if result == 'Malignant':
                 st.write("**Note:** The model has determined this CT scan to stipulate the presence of cancer. Please consult with a health professional and other experts on these results.")
+                # Symptoms checkboxes
+                symptoms = [
+                    "New or changing mole",
+                    "Itching or tenderness in a mole",
+                    "Mole with irregular borders",
+                    "Changes in color of a mole",
+                    "Bleeding from a mole",
+                    "Swollen lymph nodes",
+                    "Unexplained weight loss"
+                ]
+                
+                # Multi-select for symptoms
+                selected_symptoms = st.multiselect("Select any symptoms you're experiencing:", symptoms)
+                
+                # Done button
+                if st.button("Done"):
+                    symptom_count = len(selected_symptoms)
+                
+                    if symptom_count > 0:
+                        st.success("You've selected some symptoms. Here are a few things to consider:")
+                
+                        # Treatment suggestions based on symptoms
+                        treatment_plan = []
+                        
+                        if "New or changing mole" in selected_symptoms:
+                            treatment_plan.append("Consider seeing a dermatologist for a thorough evaluation. Changes in moles can be a sign that something needs attention.")
+                        
+                        if "Itching or tenderness in a mole" in selected_symptoms:
+                            treatment_plan.append("Keep an eye on it. Itching can sometimes indicate irritation, but it’s best to consult a healthcare provider if it continues.")
+                        
+                        if "Mole with irregular borders" in selected_symptoms:
+                            treatment_plan.append("Irregular borders can be a warning sign. Make sure to get this checked out by a specialist as soon as possible.")
+                        
+                        if "Changes in color of a mole" in selected_symptoms:
+                            treatment_plan.append("If you notice any changes in color, it might be time for a biopsy. This can help determine if there are any cancerous cells.")
+                        
+                        if "Bleeding from a mole" in selected_symptoms:
+                            treatment_plan.append("Bleeding is a serious symptom and needs immediate medical attention. Don’t hesitate to reach out to a doctor.")
+                        
+                        if "Swollen lymph nodes" in selected_symptoms:
+                            treatment_plan.append("Swelling in lymph nodes can indicate that the cancer may have spread. It’s important to consult a healthcare provider for further investigation.")
+                        
+                        if "Unexplained weight loss" in selected_symptoms:
+                            treatment_plan.append("Losing weight without trying can be a sign of a more serious issue. Discuss this with your doctor to find out what’s going on.")
+                
+                        # Show treatment suggestions
+                        if treatment_plan:
+                            st.subheader("Suggested Actions:")
+                            for treatment in treatment_plan:
+                                st.write(f"- {treatment}")
+                
+                    else:
+                        st.info("No symptoms selected. If you're feeling unwell, please reach out to a healthcare provider for guidance.")
 
             if result == 'Benign':
                 st.write("**Note:** The model has determined this CT scan to be exempt from the presence of cancer. However, please continue to consult a health professional and other experts on these results.")
